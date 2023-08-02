@@ -1,4 +1,4 @@
-package me.julie;
+package me.julie.chatlink.console;
 
 public class Main {
     public static void main(String[] args) {

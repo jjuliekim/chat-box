@@ -3,17 +3,35 @@ plugins {
 }
 
 group = "me.julie"
-version = "1.0-SNAPSHOT"
+version = "1.0.0"
 
-repositories {
-    mavenCentral()
+tasks {
+    withType<JavaCompile> {
+        options.encoding = "UTF-8"
+        sourceCompatibility = "17"
+        targetCompatibility = "17"
+    }
 }
 
-dependencies {
-    testImplementation(platform("org.junit:junit-bom:5.9.1"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
-}
+subprojects {
+    apply(plugin = "java")
 
-tasks.test {
-    useJUnitPlatform()
+    group = rootProject.group
+    version = rootProject.version
+
+    tasks {
+        withType<JavaCompile> {
+            options.encoding = "UTF-8"
+            sourceCompatibility = "17"
+            targetCompatibility = "17"
+        }
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        implementation("com.google.code.gson:gson:2.10.1")
+    }
 }
