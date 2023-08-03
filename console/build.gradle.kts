@@ -4,5 +4,15 @@ plugins {
 }
 
 dependencies {
+    implementation("com.neovisionaries:nv-websocket-client:2.14")
+}
 
+application {
+    mainClass = "me.julie.chatlink.console.Main"
+}
+
+tasks {
+    getByName<JavaExec>("run") {
+        standardInput = System.`in`
+    }
 }

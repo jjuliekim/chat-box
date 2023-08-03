@@ -17,7 +17,6 @@ public class ServerManager {
     public void startServer() throws IOException {
         var app = Javalin.create().start(20202);
         jsonManager.load();
-        jsonManager.save();
         Map<WsContext, String> connections = new HashMap<>();
         app.ws("/chat", ws -> {
             ws.onConnect(ctx -> { // ctx = unique id for this connection
@@ -25,16 +24,13 @@ public class ServerManager {
             });
 
             ws.onMessage(ctx -> { // onMessage = u sending message to server
-                if (!connections.containsKey(ctx)) {
+                if (!connections.containsKey(ctx)) { // will always run w first msg
                     connections.put(ctx, ctx.message());
                     ctx.send("Logged in as " + ctx.message());
                     return;
                 }
                 String username = connections.get(ctx);
-                System.out.println("Received: " + ctx.message());
-                for (WsContext user : connections.keySet()) {
-                    user.send(username + " sent: " + ctx.message());
-                }
+                ctx.send(username + ": " + ctx.message());
             });
 
             ws.onClose(ctx -> {
