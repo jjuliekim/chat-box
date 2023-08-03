@@ -5,6 +5,7 @@ plugins {
 
 dependencies {
     implementation("com.neovisionaries:nv-websocket-client:2.14")
+    implementation("com.github.exoad:ansicolor:68731f2778")
 }
 
 application {

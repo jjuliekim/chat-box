@@ -14,13 +14,16 @@ public class JsonManager {
     private final File directory = new File("testing");
 
     private JsonLoginInfo loginInfo;
+    private JsonNameInfo nameInfo;
 
     public void load() throws IOException {
         loginInfo = loadFromFile("logins.json", JsonLoginInfo.class, new JsonLoginInfo(new HashMap<>()));
+        nameInfo = loadFromFile("displayNames.json", JsonNameInfo.class, new JsonNameInfo(new HashMap<>()));
     }
 
     public void save() throws IOException {
         saveToFile("logins.json", loginInfo);
+        saveToFile("displayNames.json", nameInfo);
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -48,5 +51,13 @@ public class JsonManager {
 
     public void setLoginInfo(JsonLoginInfo loginInfo) {
         this.loginInfo = loginInfo;
+    }
+
+    public JsonNameInfo getNameInfo() {
+        return nameInfo;
+    }
+
+    public void setNameInfo(JsonNameInfo nameInfo) {
+        this.nameInfo = nameInfo;
     }
 }
