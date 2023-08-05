@@ -29,7 +29,7 @@ public class ClientManager {
 
         // welcome screen
         printlnReset(GREEN + "Connected to Server");
-        System.out.print("Username --> ");
+        System.out.print("Username -> ");
         username = scanner.nextLine();
         ws.sendText("username " + username);
 
@@ -44,7 +44,7 @@ public class ClientManager {
                     System.out.print("Password -> ");
                     String password = scanner.nextLine();
                     ws.sendText("signup " + username + " " + password);
-                    ws.sendText("displayname " + username + " " + name);
+                    ws.sendText("displayname#" + username + "#" + name);
                 } else if (message.equals("Password -> ")) { // log in prompts
                     System.out.print(message);
                     String password = scanner.nextLine();
@@ -55,7 +55,7 @@ public class ClientManager {
                 }
                 if (message.startsWith("connected@")) {
                     String[] info = message.split("@");
-                    System.out.println(info[1]);
+                    printlnReset(GREEN + info[1]);
                     mainMenu();
                 }
 
@@ -80,7 +80,7 @@ public class ClientManager {
                         case "1" -> {
                             System.out.print("New display name -> ");
                             String newName = scanner.nextLine();
-                            ws.sendText("changeDisplayName " + username + " " + newName);
+                            ws.sendText("changeDisplayName@" + username + "@" + newName);
                         }
                         case "2" -> {
                             printlnReset(RED + BOLD + ITALICS + "Logging out...");
@@ -88,6 +88,14 @@ public class ClientManager {
                         }
                         case "3" -> mainMenu();
                     }
+                }
+
+                if (message.equals("updatedNotif")) {
+                    printlnReset(GREEN + "Updated!");
+                }
+
+                if (message.equals("displaySettings")) {
+                    settingsMenu();
                 }
 
                 // show list of contacts
@@ -121,10 +129,15 @@ public class ClientManager {
 
         // [3] show user settings
         if (choice.equals("3")) {
-            System.out.println();
-            printlnReset(BOLD + hex("#f5ab5d") + "== Settings ==");
-            ws.sendText("getDisplayName " + username);
-            // print # of contacts too
+            settingsMenu();
         }
+    }
+
+    // the settings screen
+    private void settingsMenu() {
+        System.out.println();
+        printlnReset(BOLD + hex("#f5ab5d") + "== Settings ==");
+        ws.sendText("getDisplayName " + username);
+        // print # of contacts too
     }
 }

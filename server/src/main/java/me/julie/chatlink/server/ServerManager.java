@@ -18,12 +18,13 @@ public class ServerManager {
         app.ws("/chat", ws -> {
             ws.onMessage(ctx -> { // onMessage = u sending message to server
                 if (ctx.message().startsWith("username ")) {
+                    System.out.println("received username: " + ctx.message());
                     String[] info = ctx.message().split(" ");
                     if (!jsonManager.getLoginInfo().getLogins().containsKey(info[1])) {
                         // sign up
                         ctx.send("Display Name -> ");
                     } else { // log in
-                        ctx.send("Password: ");
+                        ctx.send("Password -> ");
                     }
                 }
 
@@ -34,8 +35,8 @@ public class ServerManager {
                     connections.put(ctx, info[1]);
                 }
 
-                if (ctx.message().startsWith("displayname ")) {
-                    String[] info = ctx.message().split(" ");
+                if (ctx.message().startsWith("displaynamemsg#")) {
+                    String[] info = ctx.message().split("#");
                     jsonManager.getNameInfo().getDisplayNames().put(info[1], info[2]);
                     jsonManager.save();
                     ctx.send("connected@Welcome " + info[2] + "!");
@@ -59,8 +60,10 @@ public class ServerManager {
                 }
 
                 if (ctx.message().startsWith("changeDisplayName")) {
-                    String[] info = ctx.message().split(" ");
-                    // jsonManager.getNameInfo().getDisplayNames().change...
+                    String[] info = ctx.message().split("@");
+                    jsonManager.getNameInfo().getDisplayNames().put(info[1], info[2]);
+                    ctx.send("updatedNotif");
+                    ctx.send("displaySettings");
                 }
 
             });
