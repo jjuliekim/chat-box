@@ -50,9 +50,11 @@ public class ClientManager {
                     String password = scanner.nextLine();
                     ws.sendText("login " + username + " " + password);
                 }
+                // red incorrect message
                 if (message.equals("Incorrect password.")) {
                     printlnReset(RED + message);
                 }
+                // green connected message w name
                 if (message.startsWith("connected@")) {
                     String[] info = message.split("@");
                     printlnReset(GREEN + info[1]);
@@ -61,6 +63,7 @@ public class ClientManager {
 
                 // settings menu
                 if (message.startsWith("displayName@")) {
+                    // settings options and print w name
                     String[] info = message.split("@");
                     printReset(BOLD + "Username: ");
                     System.out.println(username);
@@ -74,7 +77,7 @@ public class ClientManager {
                     printlnReset(BOLD + "Back");
                     System.out.print("-> ");
 
-                    // settings choice
+                    // results of settings choice
                     String choice = scanner.nextLine();
                     switch (choice) {
                         case "1" -> {
@@ -90,10 +93,12 @@ public class ClientManager {
                     }
                 }
 
+                // green updated text
                 if (message.equals("updatedNotif")) {
                     printlnReset(GREEN + "Updated!");
                 }
 
+                // calls method to display the settings menu w options
                 if (message.equals("displaySettings")) {
                     settingsMenu();
                 }
@@ -105,6 +110,7 @@ public class ClientManager {
         });
     }
 
+    // displays the main menu
     private void mainMenu() {
         System.out.println();
         printlnReset(BOLD + hex("#78aff5") + "== Main Menu ==");
