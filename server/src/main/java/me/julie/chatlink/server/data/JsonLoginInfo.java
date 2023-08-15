@@ -5,6 +5,7 @@ import java.util.Map;
 public class JsonLoginInfo {
     private Map<String, String> logins;
 
+    // <username, password>
     public JsonLoginInfo(Map<String, String> logins) {
         this.logins = logins;
     }

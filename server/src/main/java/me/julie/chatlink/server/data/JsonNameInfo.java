@@ -5,6 +5,7 @@ import java.util.Map;
 public class JsonNameInfo {
     private Map<String, String> names;
 
+    // <username, display name>
     public JsonNameInfo(Map<String, String> names) {
         this.names = names;
     }
