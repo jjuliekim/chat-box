@@ -3,18 +3,18 @@ package me.julie.chatlink.server.data;
 import java.util.Map;
 
 public class JsonLoginInfo {
-    private Map<String, String> logins;
+    private Map<String, UserInfo> logins;
 
-    // <username, password>
-    public JsonLoginInfo(Map<String, String> logins) {
+    // <username, UserInfo>
+    public JsonLoginInfo(Map<String, UserInfo> logins) {
         this.logins = logins;
     }
 
-    public Map<String, String> getLogins() {
+    public Map<String, UserInfo> getLogins() {
         return logins;
     }
 
-    public void setLogins(Map<String, String> logins) {
+    public void setLogins(Map<String, UserInfo> logins) {
         this.logins = logins;
     }
 }
