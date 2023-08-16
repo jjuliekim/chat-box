@@ -6,9 +6,9 @@ public class UserInfo {
     private String username;
     private String password;
     private String displayName;
-    private List<String> contacts; // list of display names ?
+    private List<ContactInfo> contacts;
 
-    public UserInfo(String username, String password, String displayName, List<String> contacts) {
+    public UserInfo(String username, String password, String displayName, List<ContactInfo> contacts) {
         this.username = username;
         this.password = password;
         this.displayName = displayName;
@@ -39,11 +39,11 @@ public class UserInfo {
         this.displayName = displayName;
     }
 
-    public List<String> getContacts() {
+    public List<ContactInfo> getContacts() {
         return contacts;
     }
 
-    public void setContacts(List<String> contacts) {
+    public void setContacts(List<ContactInfo> contacts) {
         this.contacts = contacts;
     }
 }

@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.util.HashMap;
 
 public class JsonManager {
-    private final Gson gson = new GsonBuilder().enableComplexMapKeySerialization().create();
+    private final Gson gson = new GsonBuilder().setPrettyPrinting().enableComplexMapKeySerialization().create();
     private final File directory = new File("testing");
 
     private JsonLoginInfo loginInfo;

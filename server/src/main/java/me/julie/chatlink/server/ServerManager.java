@@ -2,6 +2,7 @@ package me.julie.chatlink.server;
 
 import io.javalin.Javalin;
 import io.javalin.websocket.WsContext;
+import me.julie.chatlink.server.data.ContactInfo;
 import me.julie.chatlink.server.data.JsonManager;
 import me.julie.chatlink.server.data.UserInfo;
 
@@ -22,13 +23,16 @@ public class ServerManager {
         Map<WsContext, String> connections = new HashMap<>();
         app.ws("/chat", ws -> {
             ws.onMessage(ctx -> { // onMessage = u sending message to server
+                System.out.println("received: " + ctx.message());
                 // start prompt, check if username exists
-                if (ctx.message().startsWith("username@ ")) {
+                if (ctx.message().startsWith("username@")) {
                     String[] info = ctx.message().split("@");
                     if (!jsonManager.getLoginInfo().getLogins().containsKey(info[1])) {
                         // sign up
+                        System.out.println("signing up");
                         ctx.send("Display Name -> ");
                     } else { // log in
+                        System.out.println("logging in");
                         ctx.send("Password -> ");
                     }
                 }
@@ -40,7 +44,7 @@ public class ServerManager {
                             new UserInfo(info[1], info[2], info[3], new ArrayList<>()));
                     jsonManager.save();
                     connections.put(ctx, info[1]);
-                    ctx.send("connected@Welcome " + info[2] + "!");
+                    ctx.send("connected@Welcome " + info[3] + "!");
                 }
 
                 // check if username and password match
@@ -58,8 +62,8 @@ public class ServerManager {
                 }
 
                 // send the display name given the username
-                if (ctx.message().startsWith("getDisplayName ")) {
-                    String[] info = ctx.message().split(" ");
+                if (ctx.message().startsWith("getDisplayName@")) {
+                    String[] info = ctx.message().split("@");
                     ctx.send("displayName@" + jsonManager.getLoginInfo().getLogins().get(info[1]).getDisplayName());
                 }
 
@@ -68,20 +72,20 @@ public class ServerManager {
                     String[] info = ctx.message().split("@");
                     jsonManager.getLoginInfo().getLogins().get(info[1]).setDisplayName(info[2]);
                     jsonManager.save();
-                    ctx.send("updatedNotif");
+                    ctx.send("greenMessage@[UPDATED]");
                     ctx.send("displaySettings");
                 }
 
                 // sends contact display names
                 if (ctx.message().equals("allContactNames")) {
+                    int index = 1;
                     if (!jsonManager.getLoginInfo().getLogins().get(connections.get(ctx)).getContacts().isEmpty()) {
-                        int index = 1;
-                        for (String name : jsonManager.getLoginInfo().getLogins().get(connections.get(ctx)).getContacts()) {
-                            ctx.send("contactName@" + index + "@" + name);
+                        for (ContactInfo contact : jsonManager.getLoginInfo().getLogins().get(connections.get(ctx)).getContacts()) {
+                            ctx.send("contactName@" + index + "@" + contact.getDisplayName());
                             index++;
                         }
                     }
-                    ctx.send("displayContacts");
+                    ctx.send("displayContacts " + index);
                 }
 
                 // create new contact in json
@@ -89,14 +93,40 @@ public class ServerManager {
                     String[] info = ctx.message().split("@");
                     if (!jsonManager.getLoginInfo().getLogins().containsKey(info[1])) {
                         ctx.send("notValidUser");
-                        ctx.send("displayContactsMenu");
                     } else {
-                        jsonManager.getLoginInfo().getLogins().get(connections.get(ctx)).getContacts().add(info[1]);
+                        jsonManager.getLoginInfo().getLogins()
+                                .get(connections.get(ctx)).getContacts().add(new ContactInfo(info[1],
+                                        jsonManager.getLoginInfo().getLogins().get(info[1]).getDisplayName()));
                         jsonManager.save();
-                        ctx.send("contactAdded");
-                        ctx.send("displayContactsMenu");
+                        ctx.send("greenMessage@[CONTACT ADDED]");
                     }
+                    ctx.send("displayContactsMenu");
                 }
+
+                // get the contact info
+                if (ctx.message().startsWith("getContactInfo")) {
+                    String[] info = ctx.message().split(" ");
+                    ContactInfo contact = jsonManager.getLoginInfo().getLogins().get(connections.get(ctx)).getContacts().get(Integer.parseInt(info[1]) - 1);
+                    ctx.send("contactInfo@" + contact.getUsername());
+                }
+
+                // change contact's display name
+                if (ctx.message().startsWith("changeContactName@")) {
+                    String[] info = ctx.message().split("@");
+                    jsonManager.getLoginInfo().getLogins().get(connections.get(ctx)).getContacts()
+                            .get(Integer.parseInt(info[1]) - 1).setDisplayName(info[2]);
+                }
+
+                // remove contact
+                if (ctx.message().startsWith("removeContact@")) {
+                    String[] info = ctx.message().split("@");
+                    jsonManager.getLoginInfo().getLogins().get(connections.get(ctx)).getContacts()
+                            .remove(Integer.parseInt(info[1]) - 1);
+                    jsonManager.save();
+                    ctx.send("greenMessage@[CONTACT REMOVED]");
+                    ctx.send("displayContactsMenu");
+                }
+
 
             });
 
