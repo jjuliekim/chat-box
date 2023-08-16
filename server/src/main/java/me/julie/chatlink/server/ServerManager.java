@@ -129,7 +129,6 @@ public class ServerManager {
 
 
             });
-
             ws.onClose(connections::remove);
         });
     }

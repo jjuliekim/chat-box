@@ -6,6 +6,10 @@ import com.neovisionaries.ws.client.WebSocketException;
 import com.neovisionaries.ws.client.WebSocketFactory;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 
 import static me.julie.chatlink.console.Colors.*;
@@ -36,7 +40,6 @@ public class ClientManager {
         ws.addListener(new WebSocketAdapter() {
             @Override
             public void onTextMessage(WebSocket websocket, String message) {
-                System.out.println("received: " + message);
                 // when server sends client something:
 
                 // sign up prompts
@@ -174,8 +177,13 @@ public class ClientManager {
 
     // displays the main menu
     private void mainMenu() {
+        LocalDateTime myDateObj = LocalDateTime.now();
+        DateTimeFormatter myFormatObj = DateTimeFormatter.ofPattern("E, MMM dd yyyy");
+        String formattedDate = myDateObj.format(myFormatObj);
+
         System.out.println();
         printlnReset(BOLD + hex("#bc94e0") + "== Main Menu ==");
+        System.out.println(formattedDate);
         printReset(BOLD + hex("#853ec7") + "[1] ");
         printlnReset(BOLD + "Contacts");
         printReset(BOLD + hex("#853ec7") + "[2] ");
