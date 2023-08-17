@@ -1,5 +1,6 @@
 package me.julie.chatlink.server.data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class UserInfo {
@@ -21,6 +22,14 @@ public class UserInfo {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public ArrayList<String> getContactUsernames() {
+        ArrayList<String> contactUsernames = new ArrayList<>();
+        for (ContactInfo contact : contacts) {
+            contactUsernames.add(contact.getUsername());
+        }
+        return contactUsernames;
     }
 
     public String getPassword() {

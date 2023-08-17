@@ -27,33 +27,34 @@ public class ClientManager {
         scanner = new Scanner(System.in);
         try {
             ws.connect();
+            // welcome screen
+            System.out.println();
+            System.out.println();
+            printlnReset(GREEN + "Connected to Server");
+            printReset(BOLD + "Username -> ");
+            username = scanner.nextLine();
+            ws.sendText("username@" + username);
         } catch (WebSocketException e) {
             System.err.println("Failed to connect to server: " + e.getMessage());
         }
 
-        // welcome screen
-        printlnReset(GREEN + "Connected to Server");
-        System.out.print("Username -> ");
-        username = scanner.nextLine();
-        ws.sendText("username@" + username);
-
         ws.addListener(new WebSocketAdapter() {
+            // when server sends client something:
             @Override
             public void onTextMessage(WebSocket websocket, String message) {
-                // when server sends client something:
-
+                System.out.println("message: " + message);
                 // sign up prompts
                 if (message.startsWith("Display Name -> ")) {
-                    System.out.print(message);
+                    printReset(BOLD + message);
                     String name = scanner.nextLine();
-                    System.out.print("Password -> ");
+                    printReset(BOLD + "Password -> ");
                     String password = scanner.nextLine();
                     ws.sendText("signup@" + username + "@" + password + "@" + name);
                 }
 
                 // log in prompts
                 if (message.startsWith("Password -> ")) {
-                    System.out.print(message);
+                    printReset(BOLD + message);
                     String password = scanner.nextLine();
                     ws.sendText("login@" + username + "@" + password);
                 }
@@ -115,8 +116,8 @@ public class ClientManager {
                 }
 
                 // rest of contacts screen
-                if (message.startsWith("displayContacts")) {
-                    String[] info = message.split(" ");
+                if (message.startsWith("displayContacts@")) {
+                    String[] info = message.split("@");
                     contactsScreenInput(Integer.parseInt(info[1]));
                 }
 
@@ -133,12 +134,18 @@ public class ClientManager {
 
                 // display contacts menu (back, new)
                 if (message.equals("displayContactsMenu")) {
+                    System.out.println("displaying");
                     contactsMenu();
                 }
 
-                // contact info/settings
+                // individual contact's info/settings
                 if (message.startsWith("contactInfo@")) {
+                    System.out.println();
                     String[] info = message.split("@");
+
+                    System.out.println("username: " + info[1]);
+                    System.out.println("display: " + info[2]);
+
                     printlnReset(BOLD + hex("#f5d773") + info[1]);
                     printReset(BOLD + hex("#ebac1a") + "[1] ");
                     printlnReset(BOLD + "Change display name");
@@ -152,15 +159,15 @@ public class ClientManager {
 
                     // results of contact info choice
                     String choice = scanner.nextLine();
+                    System.out.println("choice: " + choice);
                     switch (choice) {
                         case "1" -> {
+                            System.out.println("Current display name -> " + info[2]);
                             System.out.print("New display name -> ");
                             String newName = scanner.nextLine();
                             ws.sendText("changeContactName@" + info[1] + "@" + newName);
                         }
-                        case "2" -> {
-                            ws.sendText("removeContact@" + info[1]);
-                        }
+                        case "2" -> ws.sendText("removeContact@" + info[1]);
                         case "3" -> {
                             ws.sendText("openConversation@" + info[1]);
                             System.out.println("opening chat with " + info[1]);
@@ -208,9 +215,7 @@ public class ClientManager {
         // choose contact to edit name, remove, or start/continue a conversation
         System.out.println();
         printlnReset(BOLD + hex("#f5d773") + "== Contacts ==");
-        printlnReset(BOLD + hex("#ebac1a") + "[BACK]");
-        printlnReset(BOLD + hex("#ebac1a") + "[NEW]");
-        // [name] last msg preview...
+        printlnReset(BOLD + hex("#ebac1a") + "[BACK]  [NEW]");
         ws.sendText("allContactNames");
     }
 
@@ -218,7 +223,6 @@ public class ClientManager {
     private void contactsScreenInput(int numOfContacts) {
         System.out.print("-> ");
         String input = scanner.nextLine().toLowerCase();
-        System.out.println("got input: " + input);
         if (input.equals("back")) {
             mainMenu();
             return;
@@ -234,9 +238,7 @@ public class ClientManager {
                 ws.sendText("getContactInfo " + input);
                 return;
             }
-        } catch (NumberFormatException ignored) {
-
-        }
+        } catch (NumberFormatException ignored) {}
         printlnReset(RED + ITALICS + "[INVALID OPTION]");
         contactsMenu();
     }

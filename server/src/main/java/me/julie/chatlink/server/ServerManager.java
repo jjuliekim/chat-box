@@ -85,7 +85,7 @@ public class ServerManager {
                             index++;
                         }
                     }
-                    ctx.send("displayContacts " + index);
+                    ctx.send("displayContacts@" + index);
                 }
 
                 // create new contact in json
@@ -100,28 +100,37 @@ public class ServerManager {
                         jsonManager.save();
                         ctx.send("greenMessage@[CONTACT ADDED]");
                     }
+                    System.out.println("contact update");
                     ctx.send("displayContactsMenu");
                 }
 
                 // get the contact info
                 if (ctx.message().startsWith("getContactInfo")) {
                     String[] info = ctx.message().split(" ");
-                    ContactInfo contact = jsonManager.getLoginInfo().getLogins().get(connections.get(ctx)).getContacts().get(Integer.parseInt(info[1]) - 1);
-                    ctx.send("contactInfo@" + contact.getUsername());
+                    ContactInfo contact = jsonManager.getLoginInfo().getLogins()
+                            .get(connections.get(ctx)).getContacts().get(Integer.parseInt(info[1]) - 1);
+                    ctx.send("contactInfo@" + contact.getUsername() + "@" + contact.getDisplayName());
                 }
 
                 // change contact's display name
                 if (ctx.message().startsWith("changeContactName@")) {
                     String[] info = ctx.message().split("@");
+                    int index = jsonManager.getLoginInfo().getLogins()
+                            .get(connections.get(ctx)).getContactUsernames().indexOf(info[1]);
                     jsonManager.getLoginInfo().getLogins().get(connections.get(ctx)).getContacts()
-                            .get(Integer.parseInt(info[1]) - 1).setDisplayName(info[2]);
+                            .get(index).setDisplayName(info[2]);
+                    jsonManager.save();
+                    ctx.send("greenMessage@[UPDATED]");
+                    ctx.send("displayContactsMenu");
                 }
 
                 // remove contact
                 if (ctx.message().startsWith("removeContact@")) {
                     String[] info = ctx.message().split("@");
+                    int index = jsonManager.getLoginInfo().getLogins()
+                            .get(connections.get(ctx)).getContactUsernames().indexOf(info[1]);
                     jsonManager.getLoginInfo().getLogins().get(connections.get(ctx)).getContacts()
-                            .remove(Integer.parseInt(info[1]) - 1);
+                            .remove(index);
                     jsonManager.save();
                     ctx.send("greenMessage@[CONTACT REMOVED]");
                     ctx.send("displayContactsMenu");
