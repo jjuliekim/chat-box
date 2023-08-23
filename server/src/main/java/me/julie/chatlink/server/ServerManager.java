@@ -7,10 +7,7 @@ import me.julie.chatlink.server.data.JsonManager;
 import me.julie.chatlink.server.data.UserInfo;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 public class ServerManager {
     private final JsonManager jsonManager = new JsonManager();
@@ -136,6 +133,99 @@ public class ServerManager {
                     ctx.send("displayContactsMenu");
                 }
 
+                // load chat
+                if (ctx.message().startsWith("openConversation@")) {
+                    String[] info = ctx.message().split("@");
+                    String username = info[1];
+                    String otherUsername = info[2];
+                    int index;
+                    String otherDisplayName;
+                    try {
+                        index = Integer.parseInt(info[2]);
+                        otherUsername = jsonManager.getLoginInfo().getLogins()
+                                .get(connections.get(ctx)).getContactUsernames().get(index - 1);
+                        otherDisplayName = jsonManager.getLoginInfo().getLogins().get(connections.get(ctx)).getContacts()
+                                .get(index - 1).getDisplayName();
+                    } catch (NumberFormatException e) {
+                        index = jsonManager.getLoginInfo().getLogins()
+                                .get(connections.get(ctx)).getContactUsernames().indexOf(otherUsername);
+                        otherDisplayName = jsonManager.getLoginInfo().getLogins().get(connections.get(ctx)).getContacts()
+                                .get(index).getDisplayName();
+                    }
+                    String userDisplayName = jsonManager.getLoginInfo().getLogins().get(connections.get(ctx)).getDisplayName();
+                    Set<List<String>> chatNames = jsonManager.getChatInfo().getChatLogs().keySet();
+                    List<String> chatLog = new ArrayList<>();
+                    if (chatNames.contains(Arrays.asList(username, otherUsername))) {
+                        chatLog = jsonManager.getChatInfo().getChatLogs().get(Arrays.asList(username, otherUsername));
+                        jsonManager.getChatInfo().getChatLogs().get(Arrays.asList(username, otherUsername)).set(0, "[OPENING CHAT WITH " + otherDisplayName + "]");
+                    } else if (chatNames.contains(Arrays.asList(otherUsername,username))) {
+                        chatLog = jsonManager.getChatInfo().getChatLogs().get(Arrays.asList(otherUsername, username));
+                        jsonManager.getChatInfo().getChatLogs().get(Arrays.asList(username, otherUsername)).set(0, "[OPENING CHAT WITH " + otherDisplayName + "]");
+                    } else {
+                        ArrayList<String> newChat = new ArrayList<>();
+                        newChat.add("[CREATING NEW CHAT WITH " + otherDisplayName + "]");
+                        newChat.add("Type '*exit*' to exit.");
+                        jsonManager.getChatInfo().getChatLogs().put(Arrays.asList(username, otherUsername), newChat);
+                    }
+                    for (String message : chatLog) {
+                        if (message.startsWith(username + "(*)")) {
+                            ctx.send("yourMessage(*)" + userDisplayName + "(*)" + message.substring(username.length() + 3));
+                        } else if (message.startsWith(otherUsername + "(*)")) {
+                            ctx.send("theirMessage(*)" + otherDisplayName + "(*)" + message.substring(otherUsername.length() + 3));
+                        } else {
+                            ctx.send("systemMessage(*)" + message);
+                        }
+                    }
+                    jsonManager.save();
+                }
+
+                // displayName ->
+                if (ctx.message().startsWith("responseConversation@")) {
+                    String[] info = ctx.message().split("@");
+                    ctx.send("arrowConversation(*)" +
+                            jsonManager.getLoginInfo().getLogins().get(info[1]).getDisplayName() + "(*) -> " + "(*)" + info[2]);
+                }
+
+                // update chat
+                if (ctx.message().startsWith("sendingMsg(*)")) {
+                    String[] info = ctx.message().split("\\(\\*\\)");
+                    String username = info[1];
+                    String otherUsername = info[2];
+                    String message = info[3];
+                    if (jsonManager.getChatInfo().getChatLogs().containsKey(Arrays.asList(username, otherUsername))) {
+                        jsonManager.getChatInfo().getChatLogs().get(Arrays.asList(username, otherUsername)).add(username + "(*)" + message);
+                    } else {
+                        jsonManager.getChatInfo().getChatLogs().get(Arrays.asList(otherUsername, username)).add(username + "(*)" + message);
+                    }
+                    jsonManager.save();
+                    ctx.send("arrowConversation(*)" + jsonManager.getLoginInfo().getLogins().get(username).getDisplayName()
+                            + "(*) -> " + message + "(*)" + otherUsername);
+                }
+
+                // get all chats for the chat menu screen to send at once
+                if (ctx.message().startsWith("allConversationPreview@")) {
+                    String[] info = ctx.message().split("@");
+                    Set<List<String>> chatNames = jsonManager.getChatInfo().getChatLogs().keySet();
+                    ArrayList<String> usernames = new ArrayList<>();
+                    ArrayList<String> previews = new ArrayList<>();
+                    for (List<String> names : chatNames) {
+                        if (names.contains(info[1])) {
+                            usernames.add(names.get(0).equals(info[1]) ? names.get(1) : names.get(0));
+                            int size = jsonManager.getChatInfo().getChatLogs().get(names).size();
+                            if (size == 2) {
+                                previews.add("[NO MESSAGES YET]");
+                            } else {
+                                String lastMessage = jsonManager.getChatInfo().getChatLogs().get(names).get(size - 1);
+                                lastMessage = lastMessage.substring(lastMessage.indexOf("(*)") + 3);
+                                if (lastMessage.length() > 30) {
+                                    lastMessage = lastMessage.substring(0, 30) + "...";
+                                }
+                                previews.add("[" + lastMessage + "]");
+                            }
+                        }
+                    }
+                    ctx.send("chatPreviewList(*)" + usernames + "(*)" + previews);
+                }
 
             });
             ws.onClose(connections::remove);
