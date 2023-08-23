@@ -194,21 +194,21 @@ public class ClientManager {
                 // if message was sent by user
                 if (message.startsWith("yourMessage(*)")) {
                     String[] info = message.split("\\(\\*\\)");
-                    printReset(BOLD + hex("#cccccc") + info[1] + ": ");
+                    printReset(BRIGHT_WHITE + BOLD + info[1] + ": ");
                     System.out.println(info[2]);
                 }
 
                 // if message was sent by other user
                 if (message.startsWith("theirMessage(*)")) {
                     String[] info = message.split("\\(\\*\\)");
-                    printReset(BOLD + WHITE + info[1] + ": ");
+                    printReset(BRIGHT_BLUE + BOLD + info[1] + ": ");
                     System.out.println(info[2]);
                 }
 
                 // if message was sent by the system
                 if (message.startsWith("systemMessage(*)")) {
                     String[] info = message.split("\\(\\*\\)");
-                    printlnReset(ITALICS + info[1]);
+                    printlnReset(ITALICS + GREEN + info[1]);
                 }
 
                 // chats menu and chat previews
@@ -219,14 +219,14 @@ public class ClientManager {
                     info[1] = info[1].substring(1, info[1].length() - 1);
                     info[2] = info[2].substring(1, info[2].length() - 1);
                     ArrayList<String> usernames = new ArrayList<>(Arrays.asList(info[1].split(", *")));
-                    ArrayList<String> previews = new ArrayList<>(Arrays.asList(info[2].split(", *")));
+                    ArrayList<String> previews = new ArrayList<>(Arrays.asList(info[2].split("], *")));
                     System.out.println("usernames: " + usernames);
                     System.out.println("previews: " + previews);
                     int i;
                     for (i = 0; i < usernames.size(); i++) {
                         printReset(BOLD + hex("#1e72e3") + "[" + (i + 1) + "] ");
                         printlnReset(BOLD + usernames.get(i));
-                        printlnReset("   " + previews.get(i));
+                        printlnReset("   " + previews.get(i) + "]");
                     }
                     chatScreenInput(i + 1);
                 }
@@ -320,7 +320,7 @@ public class ClientManager {
         }
         try {
             if (Integer.parseInt(input) <= numOfChats) {
-                ws.sendText("openConversation@" + username + "@" + input);
+                ws.sendText("openConversation@" + username + "@" + (Integer.parseInt(input) - 1));
                 return;
             }
         } catch (NumberFormatException ignored) {}

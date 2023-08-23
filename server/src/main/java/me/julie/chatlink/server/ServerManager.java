@@ -164,7 +164,7 @@ public class ServerManager {
                     } else {
                         ArrayList<String> newChat = new ArrayList<>();
                         newChat.add("[CREATING NEW CHAT WITH " + otherDisplayName + "]");
-                        newChat.add("Type '*exit*' to exit.");
+                        newChat.add("Type '*exit*' to exit chat.");
                         jsonManager.getChatInfo().getChatLogs().put(Arrays.asList(username, otherUsername), newChat);
                     }
                     for (String message : chatLog) {
