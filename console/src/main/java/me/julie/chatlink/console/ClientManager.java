@@ -136,7 +136,6 @@ public class ClientManager {
 
                 // display contacts menu (back, new)
                 if (message.equals("displayContactsMenu")) {
-                    System.out.println("displaying");
                     contactsMenu();
                 }
 
@@ -180,14 +179,20 @@ public class ClientManager {
 
                 // line for user to type their message
                 if (message.startsWith("arrowConversation(*)")) {
+                    System.out.println();
                     String[] info = message.split("\\(\\*\\)");
-                    printReset(BOLD + info[1]);
-                    System.out.print(info[2]);
+                    String theUser = info[1];
+                    String otherUser = info[2];
+                    printReset(BOLD + theUser);
+                    System.out.print(" -> ");
                     String msg = scanner.nextLine();
                     if (msg.equals("*exit*")) {
                         chatsMenu();
                     } else {
-                        ws.sendText("sendingMsg(*)" + username + "(*)" + info[3] + "(*)" + msg);
+                        LocalDateTime dateTime = LocalDateTime.now();
+                        ws.sendText("sendingMsg(*)" + theUser + "(*)" + otherUser + "(*)" + msg + "(*)(" +
+                                dateTime.getMonthValue() + "/" + dateTime.getDayOfMonth() +
+                                ", " + dateTime.getHour() + ":" + dateTime.getMinute() + ")");
                     }
                 }
 

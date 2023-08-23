@@ -7,6 +7,8 @@ import me.julie.chatlink.server.data.JsonManager;
 import me.julie.chatlink.server.data.UserInfo;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 
 public class ServerManager {
@@ -155,16 +157,24 @@ public class ServerManager {
                     String userDisplayName = jsonManager.getLoginInfo().getLogins().get(connections.get(ctx)).getDisplayName();
                     Set<List<String>> chatNames = jsonManager.getChatInfo().getChatLogs().keySet();
                     List<String> chatLog = new ArrayList<>();
+                    LocalTime time = LocalTime.now();
+                    LocalDateTime date = LocalDateTime.now();
                     if (chatNames.contains(Arrays.asList(username, otherUsername))) {
                         chatLog = jsonManager.getChatInfo().getChatLogs().get(Arrays.asList(username, otherUsername));
                         jsonManager.getChatInfo().getChatLogs().get(Arrays.asList(username, otherUsername)).set(0, "[OPENING CHAT WITH " + otherDisplayName + "]");
+                        jsonManager.getChatInfo().getChatLogs().get(Arrays.asList(username, otherUsername)).set(1, 
+                                "(" + date.getMonthValue() + "/" + date.getDayOfMonth() + ", " + time.getHour() + ":" + time.getMinute() + ")");
                     } else if (chatNames.contains(Arrays.asList(otherUsername,username))) {
                         chatLog = jsonManager.getChatInfo().getChatLogs().get(Arrays.asList(otherUsername, username));
-                        jsonManager.getChatInfo().getChatLogs().get(Arrays.asList(username, otherUsername)).set(0, "[OPENING CHAT WITH " + otherDisplayName + "]");
+                        jsonManager.getChatInfo().getChatLogs().get(Arrays.asList(otherUsername, username)).set(0, "[OPENING CHAT WITH " + otherDisplayName + "]");
+                        jsonManager.getChatInfo().getChatLogs().get(Arrays.asList(otherUsername, username)).set(1,
+                                "(" + date.getMonthValue() + "/" + date.getDayOfMonth() + ", " + time.getHour() + ":" + time.getMinute() + ")");
                     } else {
                         ArrayList<String> newChat = new ArrayList<>();
                         newChat.add("[CREATING NEW CHAT WITH " + otherDisplayName + "]");
                         newChat.add("Type '*exit*' to exit chat.");
+                        newChat.add("(" + date.getMonthValue() + "/" + date.getDayOfMonth() + ", " 
+                                + time.getHour() + ":" + time.getMinute() + ")");
                         jsonManager.getChatInfo().getChatLogs().put(Arrays.asList(username, otherUsername), newChat);
                     }
                     for (String message : chatLog) {
@@ -182,8 +192,10 @@ public class ServerManager {
                 // displayName ->
                 if (ctx.message().startsWith("responseConversation@")) {
                     String[] info = ctx.message().split("@");
+                    String username = info[1];
+                    String otherUsername = info[2];
                     ctx.send("arrowConversation(*)" +
-                            jsonManager.getLoginInfo().getLogins().get(info[1]).getDisplayName() + "(*) -> " + "(*)" + info[2]);
+                            jsonManager.getLoginInfo().getLogins().get(username).getDisplayName() + "(*)" + otherUsername);
                 }
 
                 // update chat
@@ -192,14 +204,17 @@ public class ServerManager {
                     String username = info[1];
                     String otherUsername = info[2];
                     String message = info[3];
+                    String dateTime = info[4];
                     if (jsonManager.getChatInfo().getChatLogs().containsKey(Arrays.asList(username, otherUsername))) {
-                        jsonManager.getChatInfo().getChatLogs().get(Arrays.asList(username, otherUsername)).add(username + "(*)" + message);
+                        jsonManager.getChatInfo().getChatLogs().get(Arrays.asList(username, otherUsername))
+                                .add(username + "(*)" + message + "(*)" + dateTime);
                     } else {
-                        jsonManager.getChatInfo().getChatLogs().get(Arrays.asList(otherUsername, username)).add(username + "(*)" + message);
+                        jsonManager.getChatInfo().getChatLogs().get(Arrays.asList(otherUsername, username))
+                                .add(username + "(*)" + message + "(*)" + dateTime);
                     }
                     jsonManager.save();
-                    ctx.send("arrowConversation(*)" + jsonManager.getLoginInfo().getLogins().get(username).getDisplayName()
-                            + "(*) -> " + message + "(*)" + otherUsername);
+                    ctx.send("arrowConversation(*)"
+                            + jsonManager.getLoginInfo().getLogins().get(username).getDisplayName() + "(*)" + otherUsername);
                 }
 
                 // get all chats for the chat menu screen to send at once
@@ -212,7 +227,7 @@ public class ServerManager {
                         if (names.contains(info[1])) {
                             usernames.add(names.get(0).equals(info[1]) ? names.get(1) : names.get(0));
                             int size = jsonManager.getChatInfo().getChatLogs().get(names).size();
-                            if (size == 2) {
+                            if (size == 3) {
                                 previews.add("[NO MESSAGES YET]");
                             } else {
                                 String lastMessage = jsonManager.getChatInfo().getChatLogs().get(names).get(size - 1);
