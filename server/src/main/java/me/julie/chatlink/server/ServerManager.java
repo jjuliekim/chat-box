@@ -2,6 +2,7 @@ package me.julie.chatlink.server;
 
 import io.javalin.Javalin;
 import io.javalin.websocket.WsContext;
+import me.julie.chatlink.server.data.ChatInfo;
 import me.julie.chatlink.server.data.ContactInfo;
 import me.julie.chatlink.server.data.JsonManager;
 import me.julie.chatlink.server.data.UserInfo;
@@ -145,7 +146,7 @@ public class ServerManager {
                     try {
                         index = Integer.parseInt(info[2]);
                         otherUsername = jsonManager.getLoginInfo().getLogins()
-                                .get(connections.get(ctx)).getContactUsernames().get(index - 1);
+                                .get(connections.get(ctx)).getContactUsernames().get(index);
                         otherDisplayName = jsonManager.getLoginInfo().getLogins().get(connections.get(ctx)).getContacts()
                                 .get(index - 1).getDisplayName();
                     } catch (NumberFormatException e) {
@@ -156,34 +157,39 @@ public class ServerManager {
                     }
                     String userDisplayName = jsonManager.getLoginInfo().getLogins().get(connections.get(ctx)).getDisplayName();
                     Set<List<String>> chatNames = jsonManager.getChatInfo().getChatLogs().keySet();
-                    List<String> chatLog = new ArrayList<>();
-                    LocalTime time = LocalTime.now();
-                    LocalDateTime date = LocalDateTime.now();
-                    if (chatNames.contains(Arrays.asList(username, otherUsername))) {
-                        chatLog = jsonManager.getChatInfo().getChatLogs().get(Arrays.asList(username, otherUsername));
-                        jsonManager.getChatInfo().getChatLogs().get(Arrays.asList(username, otherUsername)).set(0, "[OPENING CHAT WITH " + otherDisplayName + "]");
-                        jsonManager.getChatInfo().getChatLogs().get(Arrays.asList(username, otherUsername)).set(1, 
-                                "(" + date.getMonthValue() + "/" + date.getDayOfMonth() + ", " + time.getHour() + ":" + time.getMinute() + ")");
-                    } else if (chatNames.contains(Arrays.asList(otherUsername,username))) {
-                        chatLog = jsonManager.getChatInfo().getChatLogs().get(Arrays.asList(otherUsername, username));
-                        jsonManager.getChatInfo().getChatLogs().get(Arrays.asList(otherUsername, username)).set(0, "[OPENING CHAT WITH " + otherDisplayName + "]");
-                        jsonManager.getChatInfo().getChatLogs().get(Arrays.asList(otherUsername, username)).set(1,
-                                "(" + date.getMonthValue() + "/" + date.getDayOfMonth() + ", " + time.getHour() + ":" + time.getMinute() + ")");
-                    } else {
-                        ArrayList<String> newChat = new ArrayList<>();
-                        newChat.add("[CREATING NEW CHAT WITH " + otherDisplayName + "]");
-                        newChat.add("Type '*exit*' to exit chat.");
-                        newChat.add("(" + date.getMonthValue() + "/" + date.getDayOfMonth() + ", " 
-                                + time.getHour() + ":" + time.getMinute() + ")");
+                    List<ChatInfo> chatLog = new ArrayList<>();
+                    LocalDateTime dateTime = LocalDateTime.now();
+                    List<String> names = new ArrayList<>();
+                    boolean run = true;
+                    if (!chatNames.contains(Arrays.asList(username, otherUsername)) && !chatNames.contains(Arrays.asList(otherUsername, username))) {
+                        ArrayList<ChatInfo> newChat = new ArrayList<>();
+                        newChat.add(new ChatInfo("system", "[CREATING NEW CHAT WITH " + otherDisplayName + "]"));
+                        newChat.add(new ChatInfo("system", "Type '*exit*' to exit chat."));
+                        newChat.add(new ChatInfo("system", "(" + dateTime.getMonthValue() + "/" + dateTime.getDayOfMonth() + ", "
+                                + dateTime.getHour() + ":" + dateTime.getMinute() + ")"));
                         jsonManager.getChatInfo().getChatLogs().put(Arrays.asList(username, otherUsername), newChat);
+                        run = false;
+                    } else if (chatNames.contains(Arrays.asList(username, otherUsername))) {
+                        names = Arrays.asList(username, otherUsername);
+                    } else {
+                        names = Arrays.asList(otherUsername, username);
                     }
-                    for (String message : chatLog) {
-                        if (message.startsWith(username + "(*)")) {
-                            ctx.send("yourMessage(*)" + userDisplayName + "(*)" + message.substring(username.length() + 3));
-                        } else if (message.startsWith(otherUsername + "(*)")) {
-                            ctx.send("theirMessage(*)" + otherDisplayName + "(*)" + message.substring(otherUsername.length() + 3));
+                    if (run) {
+                        chatLog = jsonManager.getChatInfo().getChatLogs().get(names);
+                        jsonManager.getChatInfo().getChatLogs().get(names)
+                                .set(0, new ChatInfo("system", "[OPENING CHAT WITH " + otherDisplayName + "]"));
+                        jsonManager.getChatInfo().getChatLogs().get(names)
+                                .set(1, new ChatInfo("system",
+                                        "(" + dateTime.getMonthValue() + "/" + dateTime.getDayOfMonth() + ", " + dateTime.getHour() + ":" + dateTime.getMinute() + ")"));
+                    }
+                    for (ChatInfo chat : chatLog) {
+                        String sender = chat.getUsername();
+                        if (sender.equals(username)) {
+                            ctx.send("yourMessage(*)" + userDisplayName + "(*)" + chat.getMessage());
+                        } else if (sender.equals(otherUsername)) {
+                            ctx.send("theirMessage(*)" + otherDisplayName + "(*)" + chat.getMessage());
                         } else {
-                            ctx.send("systemMessage(*)" + message);
+                            ctx.send("systemMessage(*)" + chat.getMessage());
                         }
                     }
                     jsonManager.save();
@@ -204,13 +210,14 @@ public class ServerManager {
                     String username = info[1];
                     String otherUsername = info[2];
                     String message = info[3];
-                    String dateTime = info[4];
+                    String date = info[4];
+                    String time = info[5];
                     if (jsonManager.getChatInfo().getChatLogs().containsKey(Arrays.asList(username, otherUsername))) {
                         jsonManager.getChatInfo().getChatLogs().get(Arrays.asList(username, otherUsername))
-                                .add(username + "(*)" + message + "(*)" + dateTime);
+                                .add(new ChatInfo(username, message, date, time));
                     } else {
                         jsonManager.getChatInfo().getChatLogs().get(Arrays.asList(otherUsername, username))
-                                .add(username + "(*)" + message + "(*)" + dateTime);
+                                .add(new ChatInfo(username, message, date, time));
                     }
                     jsonManager.save();
                     ctx.send("arrowConversation(*)"
@@ -230,7 +237,7 @@ public class ServerManager {
                             if (size == 3) {
                                 previews.add("[NO MESSAGES YET]");
                             } else {
-                                String lastMessage = jsonManager.getChatInfo().getChatLogs().get(names).get(size - 1);
+                                String lastMessage = jsonManager.getChatInfo().getChatLogs().get(names).get(size - 1).getMessage();
                                 lastMessage = lastMessage.substring(lastMessage.indexOf("(*)") + 3);
                                 if (lastMessage.length() > 30) {
                                     lastMessage = lastMessage.substring(0, 30) + "...";

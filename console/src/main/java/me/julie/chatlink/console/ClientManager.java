@@ -190,9 +190,9 @@ public class ClientManager {
                         chatsMenu();
                     } else {
                         LocalDateTime dateTime = LocalDateTime.now();
-                        ws.sendText("sendingMsg(*)" + theUser + "(*)" + otherUser + "(*)" + msg + "(*)(" +
+                        ws.sendText("sendingMsg(*)" + theUser + "(*)" + otherUser + "(*)" + msg + "(*)" +
                                 dateTime.getMonthValue() + "/" + dateTime.getDayOfMonth() +
-                                ", " + dateTime.getHour() + ":" + dateTime.getMinute() + ")");
+                                "(*)" + dateTime.getHour() + ":" + dateTime.getMinute());
                     }
                 }
 
