@@ -23,7 +23,6 @@ public class ServerManager {
         Map<WsContext, String> connections = new HashMap<>();
         app.ws("/chat", ws -> {
             ws.onMessage(ctx -> { // onMessage = u sending message to server
-                System.out.println("received: " + ctx.message());
                 // start prompt, check if username exists
                 if (ctx.message().startsWith("username@")) {
                     String[] info = ctx.message().split("@");
@@ -131,6 +130,12 @@ public class ServerManager {
                             .get(connections.get(ctx)).getContactUsernames().indexOf(info[1]);
                     jsonManager.getLoginInfo().getLogins().get(connections.get(ctx)).getContacts()
                             .remove(index);
+                    Set<List<String>> chatNames = jsonManager.getChatInfo().getChatLogs().keySet();
+                    for (List<String> names : chatNames) {
+                        if (names.contains(info[1]) && names.contains(connections.get(ctx))) {
+                            jsonManager.getChatInfo().getChatLogs().remove(names);
+                        }
+                    }
                     jsonManager.save();
                     ctx.send("greenMessage@[CONTACT REMOVED]");
                     ctx.send("displayContactsMenu");
@@ -145,8 +150,10 @@ public class ServerManager {
                     String otherDisplayName;
                     try {
                         index = Integer.parseInt(info[2]);
+                        // contact added order doesn't always match convo started order
+                        // auto add to list of convo but have chat log empty?
                         otherUsername = jsonManager.getLoginInfo().getLogins()
-                                .get(connections.get(ctx)).getContactUsernames().get(index);
+                                .get(connections.get(ctx)).getContactUsernames().get(index - 1);
                         otherDisplayName = jsonManager.getLoginInfo().getLogins().get(connections.get(ctx)).getContacts()
                                 .get(index - 1).getDisplayName();
                     } catch (NumberFormatException e) {
@@ -185,9 +192,11 @@ public class ServerManager {
                     for (ChatInfo chat : chatLog) {
                         String sender = chat.getUsername();
                         if (sender.equals(username)) {
-                            ctx.send("yourMessage(*)" + userDisplayName + "(*)" + chat.getMessage());
+                            ctx.send("yourMessage(*)" + userDisplayName + "(*)" + chat.getMessage() +
+                                    " (" + chat.getDate() + ", " + chat.getTime() + ")");
                         } else if (sender.equals(otherUsername)) {
-                            ctx.send("theirMessage(*)" + otherDisplayName + "(*)" + chat.getMessage());
+                            ctx.send("theirMessage(*)" + otherDisplayName + "(*)" + chat.getMessage() +
+                                    " (" + chat.getDate() + ", " + chat.getTime() + ")");
                         } else {
                             ctx.send("systemMessage(*)" + chat.getMessage());
                         }
@@ -238,7 +247,6 @@ public class ServerManager {
                                 previews.add("[NO MESSAGES YET]");
                             } else {
                                 String lastMessage = jsonManager.getChatInfo().getChatLogs().get(names).get(size - 1).getMessage();
-                                lastMessage = lastMessage.substring(lastMessage.indexOf("(*)") + 3);
                                 if (lastMessage.length() > 30) {
                                     lastMessage = lastMessage.substring(0, 30) + "...";
                                 }

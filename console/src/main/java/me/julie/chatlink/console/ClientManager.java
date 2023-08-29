@@ -6,9 +6,7 @@ import com.neovisionaries.ws.client.WebSocketException;
 import com.neovisionaries.ws.client.WebSocketFactory;
 
 import java.io.IOException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,7 +42,6 @@ public class ClientManager {
             // when server sends client something:
             @Override
             public void onTextMessage(WebSocket websocket, String message) {
-                System.out.println("message: " + message);
                 // sign up prompts
                 if (message.startsWith("Display Name -> ")) {
                     printReset(BOLD + message);
@@ -170,6 +167,7 @@ public class ClientManager {
                         }
                         case "2" -> ws.sendText("removeContact@" + info[1]);
                         case "3" -> {
+                            // check if user is added back
                             ws.sendText("openConversation@" + username + "@" + info[1]);
                             ws.sendText("responseConversation@" + username + "@" + info[1]);
                         }
@@ -181,16 +179,16 @@ public class ClientManager {
                 if (message.startsWith("arrowConversation(*)")) {
                     System.out.println();
                     String[] info = message.split("\\(\\*\\)");
-                    String theUser = info[1];
+                    String displayName = info[1];
                     String otherUser = info[2];
-                    printReset(BOLD + theUser);
+                    printReset(BOLD + displayName);
                     System.out.print(" -> ");
                     String msg = scanner.nextLine();
                     if (msg.equals("*exit*")) {
                         chatsMenu();
                     } else {
                         LocalDateTime dateTime = LocalDateTime.now();
-                        ws.sendText("sendingMsg(*)" + theUser + "(*)" + otherUser + "(*)" + msg + "(*)" +
+                        ws.sendText("sendingMsg(*)" + username + "(*)" + otherUser + "(*)" + msg + "(*)" +
                                 dateTime.getMonthValue() + "/" + dateTime.getDayOfMonth() +
                                 "(*)" + dateTime.getHour() + ":" + dateTime.getMinute());
                     }
@@ -224,14 +222,14 @@ public class ClientManager {
                     info[1] = info[1].substring(1, info[1].length() - 1);
                     info[2] = info[2].substring(1, info[2].length() - 1);
                     ArrayList<String> usernames = new ArrayList<>(Arrays.asList(info[1].split(", *")));
-                    ArrayList<String> previews = new ArrayList<>(Arrays.asList(info[2].split("], *")));
+                    ArrayList<String> previews = new ArrayList<>(Arrays.asList(info[2].split("],")));
                     System.out.println("usernames: " + usernames);
                     System.out.println("previews: " + previews);
                     int i;
                     for (i = 0; i < usernames.size(); i++) {
                         printReset(BOLD + hex("#1e72e3") + "[" + (i + 1) + "] ");
                         printlnReset(BOLD + usernames.get(i));
-                        printlnReset("   " + previews.get(i) + "]");
+                        printlnReset("   " + previews.get(i));
                     }
                     chatScreenInput(i + 1);
                 }
@@ -325,7 +323,7 @@ public class ClientManager {
         }
         try {
             if (Integer.parseInt(input) <= numOfChats) {
-                ws.sendText("openConversation@" + username + "@" + (Integer.parseInt(input) - 1));
+                ws.sendText("openConversation@" + username + "@" + Integer.parseInt(input));
                 return;
             }
         } catch (NumberFormatException ignored) {}
